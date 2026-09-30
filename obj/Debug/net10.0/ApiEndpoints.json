@@ -1,0 +1,18 @@
+[
+  {
+    "ContainingType": "PrimerParcial1.Controllers.NumerosController",
+    "Method": "Sumar",
+    "RelativePath": "api/Numeros/{numero}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "numero",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
