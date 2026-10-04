@@ -9,45 +9,39 @@ namespace PrimerParcial1.Controllers;
 public class NumberController(NumbersService numbersService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetList()
+    public async Task<ActionResult<IEnumerable<NumberRecordGet>>> GetList()
     {
-        var result = await numbersService.GetListAsync();
+        var records = await numbersService.GetListAsync();
 
-        return Ok(result);
+        return Ok(records);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<ActionResult<NumberRecordGet>> GetById(int id)
     {
-        var result = await numbersService.GetByIdAsync(id);
+        var record = await numbersService.GetByIdAsync(id);
 
-        if (result == null)
+        if (record is null)
             return NotFound();
 
-        return Ok(result);
+        return Ok(record);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Save(NumberRecord record)
+    public async Task<ActionResult<int>> Save(NumberRecordSet record)
     {
-        record.Fecha = DateTime.Now;
-
         var id = await numbersService.SaveAsync(record);
 
-        record.Id = id;
-
-        return Ok(record);
+        return Ok(id);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
         int id,
-        NumberRecord record)
+        NumberRecordSet record)
     {
-        record.Id = id;
+        await numbersService.UpdateAsync(id, record);
 
-        await numbersService.UpdateAsync(record);
-
-        return Ok(record);
+        return NoContent();
     }
 }

@@ -33,7 +33,7 @@ public class NumbersService(IConfiguration configuration)
         await connection.ExecuteAsync(sql);
     }
 
-    public async Task<int> SaveAsync(NumberRecord record)
+    public async Task<int> SaveAsync(NumberRecordSet record)
     {
         using var connection = CreateConnection();
 
@@ -46,10 +46,17 @@ public class NumbersService(IConfiguration configuration)
             SELECT last_insert_rowid();
             """;
 
-        return await connection.ExecuteScalarAsync<int>(sql, record);
+        var parameters = new
+        {
+            Fecha = DateTime.Now,
+            record.Numero,
+            record.Resultado
+        };
+
+        return await connection.ExecuteScalarAsync<int>(sql, parameters);
     }
 
-    public async Task UpdateAsync(NumberRecord record)
+    public async Task UpdateAsync(int id, NumberRecordSet record)
     {
         using var connection = CreateConnection();
 
@@ -62,42 +69,67 @@ public class NumbersService(IConfiguration configuration)
             WHERE Id = @Id;
             """;
 
-        await connection.ExecuteAsync(sql, record);
+        var parameters = new
+        {
+            Id = id,
+            Fecha = DateTime.Now,
+            record.Numero,
+            record.Resultado
+        };
+
+        await connection.ExecuteAsync(sql, parameters);
     }
 
-    public async Task<NumberRecord?> GetByIdAsync(int id)
+    public async Task<NumberRecordGet?> GetByIdAsync(int id)
     {
         using var connection = CreateConnection();
 
         const string sql = """
-            SELECT
-                Id,
-                Fecha,
-                Numero,
-                Resultado
-            FROM NumberRecords
-            WHERE Id = @Id;
-            """;
+        SELECT
+            Id,
+            Fecha,
+            Numero,
+            Resultado
+        FROM NumberRecords
+        WHERE Id = @Id;
+        """;
 
-        return await connection.QueryFirstOrDefaultAsync<NumberRecord>(
+        var result = await connection.QuerySingleOrDefaultAsync<dynamic>(
             sql,
             new { Id = id });
+
+        if (result is null)
+            return null;
+
+        return new NumberRecordGet(
+            (int)result.Id,
+            DateTime.Parse(result.Fecha.ToString()!),
+            (int)result.Numero,
+            (int)result.Resultado
+        );
     }
 
-    public async Task<IEnumerable<NumberRecord>> GetListAsync()
+    public async Task<IEnumerable<NumberRecordGet>> GetListAsync()
     {
         using var connection = CreateConnection();
 
         const string sql = """
-            SELECT
-                Id,
-                Fecha,
-                Numero,
-                Resultado
-            FROM NumberRecords
-            ORDER BY Id;
-            """;
+        SELECT
+            Id,
+            Fecha,
+            Numero,
+            Resultado
+        FROM NumberRecords
+        ORDER BY Id;
+        """;
 
-        return await connection.QueryAsync<NumberRecord>(sql);
+        var results = await connection.QueryAsync<dynamic>(sql);
+
+        return results.Select(x => new NumberRecordGet(
+            (int)x.Id,
+            DateTime.Parse(x.Fecha.ToString()!),
+            (int)x.Numero,
+            (int)x.Resultado
+        ));
     }
 }
